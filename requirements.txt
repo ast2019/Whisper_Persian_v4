@@ -1,0 +1,16 @@
+# Whisper Persian v4 — STT Service Dependencies
+# CPU-only PyTorch (بدون CUDA — حجم کمتر)
+torch==2.3.1+cpu
+torchaudio==2.3.1+cpu
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# Transformers (مدل Whisper)
+transformers==4.44.0
+
+# FastAPI + Server
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+python-multipart==0.0.9
+
+# اختیاری: سرعت بیشتر tokenizer
+tokenizers>=0.19.0
