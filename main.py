@@ -50,7 +50,7 @@ MAX_CONCURRENT = int(os.environ.get("MAX_CONCURRENT", 2))
 REQUEST_TIMEOUT = int(os.environ.get("REQUEST_TIMEOUT", 600))  # ثانیه
 
 # پورت
-PORT = int(os.environ.get("PORT", 8000))
+PORT = int(os.environ.get("PORT", 3000))
 
 # ─── State ────────────────────────────────────────────────────────
 

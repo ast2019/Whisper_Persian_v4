@@ -48,9 +48,9 @@ USER sttuser
 
 # ── Health check ─────────────────────────────────────────────
 HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
-    CMD curl -fsS http://localhost:8000/health || exit 1
+    CMD curl -fsS http://localhost:3000/health || exit 1
 
-EXPOSE 8000
+EXPOSE 3000
 
 ENTRYPOINT ["/app/entrypoint.sh"]
 CMD ["python", "-u", "main.py"]

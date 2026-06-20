@@ -5,7 +5,7 @@ echo "========================================"
 echo " Whisper Persian v4 — STT Service"
 echo "   Model: ${STT_MODEL:-nezamisafa/whisper-persian-v4}"
 echo "   Device: ${DEVICE:-cpu}"
-echo "   Port: ${PORT:-8000}"
+echo "   Port: ${PORT:-3000}"
 echo "   Max Concurrent: ${MAX_CONCURRENT:-2}"
 echo "========================================"
 
