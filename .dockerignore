@@ -1,0 +1,33 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+venv/
+.venv/
+*.egg-info
+
+# IDE
+.vscode/
+.idea/
+
+# Environment (secrets)
+.env
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Docs
+README.md
+*.md
+
+# Models (will be downloaded in build stage)
+models/
+
+# Logs
+logs/
+*.log
