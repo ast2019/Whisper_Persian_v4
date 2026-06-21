@@ -61,6 +61,9 @@ _start_time = time.time()
 _total_requests = 0
 _total_errors = 0
 _total_processed = 0
+_active_jobs = 0  # تعداد درخواست‌هایی که الان دارن پردازش می‌شن
+_waiting_jobs = 0  # تعداد درخواست‌هایی که منتظر semaphore هستن
+_state_lock = threading.Lock()  # برای thread-safe بودن شمارنده‌ها
 
 
 # ─── Model Loading ────────────────────────────────────────────────
@@ -149,6 +152,11 @@ async def health():
         "model": MODEL_NAME,
         "device": DEVICE,
         "uptime_seconds": int(time.time() - _start_time),
+        "queue": {
+            "active": _active_jobs,
+            "waiting": _waiting_jobs,
+            "max_concurrent": MAX_CONCURRENT,
+        },
         "stats": {
             "total_requests": _total_requests,
             "total_processed": _total_processed,
@@ -176,7 +184,7 @@ async def transcribe(
     Returns:
       {"text": "متن ترنسکریپت شده"}
     """
-    global _total_requests, _total_errors, _total_processed
+    global _total_requests, _total_errors, _total_processed, _waiting_jobs, _active_jobs
     _total_requests += 1
 
     # ── بررسی آمادگی مدل ────────────────────────────────────────
@@ -211,14 +219,27 @@ async def transcribe(
             tmp.write(content)
             tmp_path = tmp.name
 
+        # شمارش صف انتظار
+        with _state_lock:
+            _waiting_jobs += 1
+
         # Concurrency control — فقط MAX_CONCURRENT درخواست همزمان
         acquired = _model_lock.acquire(timeout=30)
+
+        with _state_lock:
+            _waiting_jobs -= 1
+
         if not acquired:
             _total_errors += 1
             raise HTTPException(
                 status_code=429,
-                detail=f"Server busy — max {MAX_CONCURRENT} concurrent requests",
+                detail=f"Server busy — max {MAX_CONCURRENT} concurrent requests. "
+                       f"Active: {_active_jobs}, Waiting: {_waiting_jobs}",
             )
+
+        # شمارش پردازش فعال
+        with _state_lock:
+            _active_jobs += 1
 
         try:
             lang = language or DEFAULT_LANGUAGE
@@ -239,7 +260,8 @@ async def transcribe(
 
             logger.info(
                 f"Transcribed: {file_size_mb:.1f}MB | "
-                f"{elapsed:.1f}s | {len(text)} chars | lang={lang}"
+                f"{elapsed:.1f}s | {len(text)} chars | lang={lang} | "
+                f"queue: {_active_jobs} active, {_waiting_jobs} waiting"
             )
 
             _total_processed += 1
@@ -259,6 +281,8 @@ async def transcribe(
                 return {"text": text}
 
         finally:
+            with _state_lock:
+                _active_jobs -= 1
             _model_lock.release()
 
     except HTTPException:
