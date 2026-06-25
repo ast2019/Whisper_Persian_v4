@@ -185,25 +185,29 @@ async def transcribe(
       {"text": "متن ترنسکریپت شده"}
     """
     global _total_requests, _total_errors, _total_processed, _waiting_jobs, _active_jobs
-    _total_requests += 1
+    with _state_lock:
+        _total_requests += 1
 
     # ── بررسی آمادگی مدل ────────────────────────────────────────
     if not _model_ready:
-        _total_errors += 1
+        with _state_lock:
+            _total_errors += 1
         raise HTTPException(status_code=503, detail="Model not loaded yet")
 
     # ── بررسی اندازه فایل ───────────────────────────────────────
     content = await file.read()
     file_size_mb = len(content) / (1024 * 1024)
     if file_size_mb > MAX_FILE_SIZE_MB:
-        _total_errors += 1
+        with _state_lock:
+            _total_errors += 1
         raise HTTPException(
             status_code=413,
             detail=f"File too large: {file_size_mb:.1f}MB (max: {MAX_FILE_SIZE_MB}MB)",
         )
 
     if len(content) == 0:
-        _total_errors += 1
+        with _state_lock:
+            _total_errors += 1
         raise HTTPException(status_code=400, detail="Empty file")
 
     # ── تشخیص پسوند فایل ────────────────────────────────────────
@@ -230,7 +234,8 @@ async def transcribe(
             _waiting_jobs -= 1
 
         if not acquired:
-            _total_errors += 1
+            with _state_lock:
+                _total_errors += 1
             raise HTTPException(
                 status_code=429,
                 detail=f"Server busy — max {MAX_CONCURRENT} concurrent requests. "
@@ -264,7 +269,8 @@ async def transcribe(
                 f"queue: {_active_jobs} active, {_waiting_jobs} waiting"
             )
 
-            _total_processed += 1
+            with _state_lock:
+                _total_processed += 1
 
             # ── فرمت خروجی ──────────────────────────────────────
             if response_format == "text":
@@ -288,7 +294,8 @@ async def transcribe(
     except HTTPException:
         raise
     except Exception as e:
-        _total_errors += 1
+        with _state_lock:
+            _total_errors += 1
         logger.error(f"Transcription error: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Transcription failed: {str(e)}")
     finally:
