@@ -1,6 +1,6 @@
 # ─────────────────────────────────────────────────────────────
 #  Whisper Persian v4 — STT Service for Coolify
-#  CPU-only | Model pre-downloaded at build time
+#  CPU-only | Model downloaded at first runtime (NOT build time)
 #  API: OpenAI-compatible /v1/audio/transcriptions
 # ─────────────────────────────────────────────────────────────
 
@@ -27,25 +27,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# ── دانلود مدل هنگام build (نه runtime) ─────────────────────
-# این باعث میشه container سریع بالا بیاد و نیازی به اینترنت نداشته باشه
-# نکته: دانلود در یک اسکریپت جدا انجام می‌شود (نه RUN python -c چندخطی) چون
-# Coolify ARGهای خودش را تزریق می‌کند و دستور چندخطی را می‌شکست.
-COPY download_model.py .
-RUN python download_model.py
-
 # ── کپی سورس ────────────────────────────────────────────────
 COPY main.py .
+COPY download_model.py .
 COPY entrypoint.sh .
 RUN chmod +x /app/entrypoint.sh
 
 # ── کاربر غیر root ──────────────────────────────────────────
 RUN useradd -r -s /bin/false -d /app sttuser \
+    && mkdir -p /app/models \
     && chown -R sttuser:sttuser /app
 USER sttuser
 
 # ── Health check ─────────────────────────────────────────────
-HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
+# start-period=300s چون دانلود مدل در اولین اجرا تا 5 دقیقه طول می‌کشد
+HEALTHCHECK --interval=30s --timeout=10s --start-period=300s --retries=5 \
     CMD curl -fsS http://localhost:3000/health || exit 1
 
 EXPOSE 3000
