@@ -24,15 +24,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     xz-utils \
     && rm -rf /var/lib/apt/lists/*
 
-# ffmpeg static binary — 1 فایل، بدون dependency، ~80MB به جای 470MB
-RUN mkdir -p /tmp/ffmpeg-src /tmp/ffmpeg-extract \
-    && curl -L https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz \
+# ffmpeg static binary از BtbN/FFmpeg-Builds (GitHub Releases) — پایدارتر از johnvansickle
+# نسخه 7.1 GPL linux64 static
+RUN mkdir -p /tmp/ffmpeg-src \
+    && curl -L --retry 3 --retry-delay 5 \
+       https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-n7.1-latest-linux64-gpl-7.1.tar.xz \
        -o /tmp/ffmpeg-src/ffmpeg.tar.xz \
-    && tar -xJf /tmp/ffmpeg-src/ffmpeg.tar.xz -C /tmp/ffmpeg-extract \
-    && cp /tmp/ffmpeg-extract/ffmpeg-*-amd64-static/ffmpeg /usr/local/bin/ffmpeg \
-    && cp /tmp/ffmpeg-extract/ffmpeg-*-amd64-static/ffprobe /usr/local/bin/ffprobe \
+    && tar -xJf /tmp/ffmpeg-src/ffmpeg.tar.xz -C /tmp/ffmpeg-src \
+    && cp /tmp/ffmpeg-src/ffmpeg-n7.1-latest-linux64-gpl-7.1/bin/ffmpeg /usr/local/bin/ffmpeg \
+    && cp /tmp/ffmpeg-src/ffmpeg-n7.1-latest-linux64-gpl-7.1/bin/ffprobe /usr/local/bin/ffprobe \
     && chmod +x /usr/local/bin/ffmpeg /usr/local/bin/ffprobe \
-    && rm -rf /tmp/ffmpeg-src /tmp/ffmpeg-extract
+    && rm -rf /tmp/ffmpeg-src
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir --progress-bar off -r requirements.txt
