@@ -1,16 +1,21 @@
-# Whisper Persian v4 — STT Service Dependencies
-# CPU-only PyTorch (بدون CUDA — حجم کمتر)
-torch==2.3.1+cpu
-torchaudio==2.3.1+cpu
+# ─── CPU-only index باید اول باشد تا pip اشتباه CUDA نگیرد ───
 --extra-index-url https://download.pytorch.org/whl/cpu
 
-# Transformers (مدل Whisper)
+# PyTorch CPU-only (بدون CUDA — حجم ~200MB به جای 1.5GB)
+torch==2.3.1+cpu
+torchaudio==2.3.1+cpu
+
+# Transformers
 transformers==4.44.0
+accelerator>=0.26.0
 
 # FastAPI + Server
 fastapi==0.115.0
 uvicorn[standard]==0.30.6
 python-multipart==0.0.9
 
-# اختیاری: سرعت بیشتر tokenizer
+# Tokenizer
 tokenizers>=0.19.0
+
+# HuggingFace Hub (برای snapshot_download)
+huggingface_hub>=0.23.0
