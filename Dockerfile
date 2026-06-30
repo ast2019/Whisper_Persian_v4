@@ -4,16 +4,15 @@
 #  API: OpenAI-compatible /v1/audio/transcriptions
 # ─────────────────────────────────────────────────────────────
 
-FROM python:3.11-slim AS base
+FROM python:3.11-slim
 
-# ── متغیرهای build ──────────────────────────────────────────
-ARG MODEL_NAME=nezamisafa/whisper-persian-v4
+# ── متغیرها ───────────────────────────────────────────────────
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     HF_HOME=/app/models \
     TRANSFORMERS_CACHE=/app/models \
-    MODEL_NAME=${MODEL_NAME}
+    MODEL_NAME=nezamisafa/whisper-persian-v4
 
 WORKDIR /app
 
@@ -31,13 +30,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY main.py .
 COPY download_model.py .
 COPY entrypoint.sh .
-RUN chmod +x /app/entrypoint.sh
-
-# ── کاربر غیر root ──────────────────────────────────────────
-RUN useradd -r -s /bin/false -d /app sttuser \
-    && mkdir -p /app/models \
-    && chown -R sttuser:sttuser /app
-USER sttuser
+RUN chmod +x /app/entrypoint.sh && mkdir -p /app/models
 
 # ── Health check ─────────────────────────────────────────────
 # start-period=300s چون دانلود مدل در اولین اجرا تا 5 دقیقه طول می‌کشد
