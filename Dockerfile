@@ -31,7 +31,9 @@ RUN chmod +x /app/entrypoint.sh && mkdir -p /app/models
 
 VOLUME ["/app/models"]
 
-HEALTHCHECK --interval=30s --timeout=10s --start-period=3600s --retries=3 \
+# start-period=900s (15 دقیقه) — مدل cache شده، فقط 3-4 ثانیه لود می‌شه
+# اگر volume نداری و دانلود لازمه، 1800s کافیه
+HEALTHCHECK --interval=30s --timeout=10s --start-period=900s --retries=3 \
     CMD curl -fsS http://localhost:3000/health || exit 1
 
 EXPOSE 3000
