@@ -29,12 +29,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # ── دانلود مدل هنگام build (نه runtime) ─────────────────────
 # این باعث میشه container سریع بالا بیاد و نیازی به اینترنت نداشته باشه
-RUN python -c "\
-from transformers import pipeline; \
-import torch; \
-print(f'Downloading model: ${MODEL_NAME}'); \
-p = pipeline('automatic-speech-recognition', model='${MODEL_NAME}', device='cpu', torch_dtype=torch.float32); \
-print('Model downloaded and cached successfully')"
+# نکته: دانلود در یک اسکریپت جدا انجام می‌شود (نه RUN python -c چندخطی) چون
+# Coolify ARGهای خودش را تزریق می‌کند و دستور چندخطی را می‌شکست.
+COPY download_model.py .
+RUN python download_model.py
 
 # ── کپی سورس ────────────────────────────────────────────────
 COPY main.py .
